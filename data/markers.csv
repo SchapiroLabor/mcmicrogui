@@ -1,0 +1,13 @@
+channel_number,cycle_number,marker_name,Filter,excitation_wavelength,emission_wavelength
+1,1,DNA_1,DAPI,395,431
+2,1,AF488,FITC,485,525
+3,1,AF555,Sytox,555,590
+4,1,AF647,Cy5,640,690
+5,2,DNA_2,DAPI,395,431
+6,2,A488_background,FITC,485,525
+7,2,A555_background,Sytox,555,590
+8,2,A647_background,Cy5,640,690
+9,3,DNA_3,DAPI,395,431
+10,3,FDX1,FITC,485,525
+11,3,CD357,Sytox,555,590
+12,3,CD1D,Cy5,640,690
