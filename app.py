@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 from jinja2 import Environment, FileSystemLoader
 
 
+
 #jinja config
 env = Environment(loader=FileSystemLoader('./'))
 print("templates loaded")
