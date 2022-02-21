@@ -4,11 +4,13 @@
 
 #import stuff
 
-import webbrowser as browser
 
+import webbrowser as browser
+import os
 from pathlib import Path
 from collections import defaultdict
 from PIL import Image
+
 
 import pandas as pd
 import numpy as np
@@ -27,7 +29,9 @@ print("templates loaded")
 file_extensions = [".tif", ".tiff"]
 mainpath = Path("./")
 print(mainpath)
-
+max_img_size = 20971520 #20MB
+scale_factor = 1
+print(scale_factor)
 # TODO SEE IF THERE IS A DIFFERENCE WITH MULTIPLE IMAGES, MAY NEED TO REDO THIS
 
 # assemble a dictionary of paths to the images
@@ -40,10 +44,24 @@ img_path_dict = defaultdict(list) #arrange and populate a dictionary
 for key, value in combined_list:
     img_path_dict[key].append(value)
 
+#scale down huge images by calculating a scalefactor based on their filesize
+path_to_whole_img= img_path_dict["registration"]
+
+for file in path_to_whole_img: #TODO maybe add check for filetype if nessecary?
+    
+    new_size = os.path.getsize(file)
+    print("Size: " + str(new_size))
+    while new_size > max_img_size:  
+        scale_factor = scale_factor*0.98 # reduce by two percent each run, needs testing #why does this produce a tuple????????
+        print("New scale factor: " + str(scale_factor))
+        new_size = new_size*scale_factor
+        print("Size: " + str(new_size))
+    
+
 #loading images
 segmentation_cells = imageio.imread(img_path_dict["segmentation/unmicst-exemplar-001"][0])
 segmentation_nuclei = imageio.imread(img_path_dict["segmentation/unmicst-exemplar-001"][1])
-whole_image = imageio.imread(("data/registration/exemplar-001.ome.tif")) # doesn't work with imageio)
+whole_image = imageio.imread(("data/registration/exemplar-001.ome.tif")) 
 whole_image_pil = Image.fromarray(whole_image)
 quantification = pd.read_csv("data/quantification/unmicst-exemplar-001_cell.csv")
 
