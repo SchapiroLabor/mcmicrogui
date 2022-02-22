@@ -1,24 +1,5 @@
-data/illumination/exemplar-001-cycle-01-dfp.tif
-data/illumination/exemplar-001-cycle-01-ffp.tif
-data/illumination/exemplar-001-cycle-02-dfp.tif
-data/illumination/exemplar-001-cycle-02-ffp.tif
-data/illumination/exemplar-001-cycle-03-dfp.tif
-data/illumination/exemplar-001-cycle-03-ffp.tif
-data/probability-maps/unmicst/exemplar-001-pmap.tif
-data/raw/exemplar-001-cycle-01.ome.tiff
-data/raw/exemplar-001-cycle-02.ome.tiff
-data/raw/exemplar-001-cycle-03.ome.tiff
-data/qc/provenance/quantification:mcquant (1).log
-data/qc/provenance/quantification:mcquant (1).sh
-data/qc/provenance/registration:ashlar.log
-data/qc/provenance/registration:ashlar.sh
-data/qc/provenance/segmentation:s3seg (1).log
-data/qc/provenance/segmentation:s3seg (1).sh
-data/qc/provenance/segmentation:worker (unmicst-1).log
-data/qc/provenance/segmentation:worker (unmicst-1).sh
-data/qc/s3seg/unmicst-exemplar-001/cellOutlines.ome.tif
-data/qc/s3seg/unmicst-exemplar-001/nucleiOutlines.ome.tif
-data/qc/unmicst/exemplar-001_Preview_1.tif
-data/registration/exemplar-001.ome.tif
-data/segmentation/unmicst-exemplar-001/cell.ome.tif
-data/segmentation/unmicst-exemplar-001/nuclei.ome.tif
+*.tif
+*.tiff
+*.sh
+/data/work/*
+/data/.nextflow
