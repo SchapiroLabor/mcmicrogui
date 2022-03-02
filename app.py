@@ -1,127 +1,168 @@
-
-#df = pd.read_csv("/mnt/c/Users/draco/Documents/schapiro_lab/exemplar-001/quantificatcv2n/unmicst-exemplar-001_cell.csv") #TODO dynamic path
-
-
-#import stuff
-
 import webbrowser as browser
-
+import os
+import re
 from pathlib import Path
 from collections import defaultdict
-from PIL import Image
 
-import pandas as pd
-import numpy as np
+
 import imageio
-import plotly.graph_objects as go
-
+import yaml
+from pandas import read_csv
+import plotly.express as px
+import numpy as np
+import cv2
 from jinja2 import Environment, FileSystemLoader
 
 
-#jinja config
-env = Environment(loader=FileSystemLoader('./'))
-print("templates loaded")
+# jinja config6
+env = Environment(loader=FileSystemLoader("./"))
 
-#parameters
-file_extensions = [".tif", ".tiff"]
-mainpath = Path("./")
-print(mainpath)
+# read parameters
+data_path = "data/"
+params_paths = [
+    path for path in Path("data").rglob("*.yml")
+]  # just in case there are mulltiple parameter files
+for path in params_paths:
+    with open(path, "r") as f:
+        mcmicro_params = yaml.safe_load(f)
 
-# TODO SEE IF THERE IS A DIFFERENCE WITH MULTIPLE IMAGES, MAY NEED TO REDO THIS
+file_extensions = list(mcmicro_params["singleFormats"].keys()) + list(
+    mcmicro_params["multiFormats"].keys()
+)
 
-# assemble a dictionary of paths to the images
-images = [str(p) for p in mainpath.rglob('*') if p.suffix in file_extensions] # retrieve the paths for the images
-categories = [str(p.parent).replace("data/","") for p in mainpath.rglob('*') if p.suffix in file_extensions] # retrieve the paths for the "categories"
+sample_name = mcmicro_params["sampleName"]
 
-combined_list = list(zip(categories, images)) # order them into pairs
-img_path_dict = defaultdict(list) #arrange and populate a dictionary  
+regex = re.compile(r"^.*?:|\,.*$|'")
+modules = {
+    key: re.sub(regex, "", str(value[0]))
+    for key, value in mcmicro_params.items()
+    if "module" in key
+}
+segmentation_path = Path(
+    data_path
+    + sample_name
+    + "/segmentation/"
+    + modules["modulesPM"]
+    + "-"
+    + sample_name  # Can you run multiple segmetations algorithms?
+)
 
-for key, value in combined_list:
-    img_path_dict[key].append(value)
+registration_path = Path(data_path + sample_name + "/registration")
+quantification_path = Path(data_path + sample_name + "/quantification")
 
-#loading images
-segmentation_cells = imageio.imread(img_path_dict["segmentation/unmicst-exemplar-001"][0])
-segmentation_nuclei = imageio.imread(img_path_dict["segmentation/unmicst-exemplar-001"][1])
-whole_image = imageio.imread(("data/registration/exemplar-001.ome.tif")) # doesn't work with imageio)
-whole_image_pil = Image.fromarray(whole_image)
-quantification = pd.read_csv("data/quantification/unmicst-exemplar-001_cell.csv")
+max_img_size = (
+    104857600  # 100MB # the actual html ends up being much smaller, how? Plotly magic??
+)
 
-
-num_cells = np.amax(segmentation_cells)
-num_nuclei = np.amax(segmentation_nuclei) 
-
-# Create figure
-fig = go.Figure()
-
-# Constants
-img_width = 2509
-img_height = 3138
 scale_factor = 1
 
-# Add invisible scatter trace.
-# This trace is added to help the autoresize logic work.
-fig.add_trace(
-    go.Scatter(
-        x=[0, img_width * scale_factor],
-        y=[0, img_height * scale_factor],
-        mode="markers",
-        marker_opacity=0
-    )
+# load quantification csv
+
+quantification = [
+    read_csv(csv)
+    for csv in quantification_path.glob(modules["modulesPM"] + "-" + sample_name + "*")
+    if csv.suffix == ".csv"
+]
+
+
+# loading images
+whole_image = [
+    imageio.imread(image)
+    for image in registration_path.rglob(sample_name + "*")
+    if image.suffix in file_extensions
+][0]
+
+segmentation_cells = [
+    imageio.imread(image)
+    for image in segmentation_path.rglob("cell*")
+    if image.suffix in file_extensions
+]
+
+segmentation_nuclei = [
+    imageio.imread(image)
+    for image in segmentation_path.rglob("nuclei*")
+    if image.suffix in file_extensions
+]
+
+
+# assuming only a single registration image can exist
+
+num_cells = np.amax(segmentation_cells)
+num_nuclei = np.amax(segmentation_nuclei)
+
+# getting parameters for downscaling
+image_file_size = [
+    os.path.getsize(image) for image in Path(registration_path).rglob(sample_name + "*")
+][
+    0
+]  # assuming only a single registration image can exist
+
+image_width = whole_image.shape[0]
+image_height = whole_image.shape[1]
+image_size = whole_image.size
+image_factor = image_file_size / image_size
+scaled_file_size = image_file_size
+scale_factor = 1
+
+# calculate scaling factor
+while scaled_file_size > max_img_size:
+    scale_factor = scale_factor * 0.98
+    print("New scale factor: " + str(scale_factor))
+    scaled_width = image_width * scale_factor
+    scaled_height = image_height * scale_factor
+    scaled_file_size = scaled_width * scaled_height * image_factor
+    print("New file size: " + str(scaled_file_size))
+    print("New image size " + str(scaled_width) + "||" + str(scaled_height))
+
+# scale image
+
+scaled_image_size = (int(scaled_width), int(scaled_height))
+whole_image_resized = cv2.resize(whole_image, scaled_image_size)
+# read the quantification files
+
+# retrieve the number of cells from the segementation -> maximum pixel intensitiy
+
+
+# crop the brightest spot as a high res sample
+side_length = 500
+blurry_image = cv2.GaussianBlur(whole_image, (5, 5), 0)
+(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blurry_image)
+p1 = (int(maxLoc[0] - (side_length / 2)), int(maxLoc[1] - (side_length / 2)))
+p2 = (int(maxLoc[0] + (side_length / 2)), int(maxLoc[1] + (side_length / 2)))
+high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
+# cv2.namedWindow("image", cv2.WINDOW_KEEPRATIO)
+
+# cv2.imshow("image", high_res_crop)
+# cv2.resizeWindow("image", 400, 400)
+# cv2.waitKey(0)
+# Determine where to split up the image
+
+
+# Create plotly plot for the resized image
+
+fig1 = px.imshow(whole_image_resized)
+fig2 = px.imshow(high_res_crop)
+fig1.write_html(
+    "html/figures/zoomable_image.html",
+    config={"doubleClick": "reset", "scrollZoom": True, "displayModeBar": True},
 )
 
-# Configure axes
-fig.update_xaxes(
-    visible=True,
-    range=[0, img_width * scale_factor]
+fig2.write_html(
+    "html/figures/high_res.html",
+    config={"doubleClick": "reset", "scrollZoom": False, "displayModeBar": False},
 )
 
-fig.update_yaxes(
-    visible=True,
-    range=[0, img_width * scale_factor],
-    # the scaleanchor attribute ensures that the aspect ratio stays constant
-    scaleanchor="x"
-)
+# pass parameters to html
+html_parameters = {"num_cells": num_cells, "num_nuclei": num_nuclei}
 
-# Add image
-fig.add_layout_image(
-    dict(
-        x=0,
-        sizex=img_width * scale_factor,
-        y=img_height * scale_factor,
-        sizey=img_height * scale_factor,
-        xref="x",
-        yref="y",
-        opacity=1.0,
-        layer="below",
-        sizing="stretch",
-        source=whole_image_pil)
-)
-
-# Configure other layout
-fig.update_layout(
-    width=400,
-    height=400,
-    margin={"l": 0, "r": 0, "t": 0, "b": 0},
-)
-
-# Disable the autosize on double click because it adds unwanted margins around the image
-# More detail: https://plotly.com/python/configuration-options/
-fig.write_html("html/figures/zoomable_image.html", config={'doubleClick': 'reset', 'scrollZoom': True, 'displayModeBar': True})
-
-html_parameters = {
-    "num_cells": num_cells,
-    "num_nuclei": num_nuclei
-    
-}
-
-#generate html
+# generate html
 TEMPLATE_FILE = "html/template.j2"
 template = env.get_template(TEMPLATE_FILE)
-report_html_code = template.render(html_parameters = html_parameters)
+report_html_code = template.render(html_parameters=html_parameters)
 
-print(report_html_code)
-
+# write the report file
 with open("report.html", "w") as fh:
     fh.write(report_html_code)
 
+# open it in the default browser
 browser.open("report.html")

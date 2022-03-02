@@ -1,0 +1,84 @@
+Feb-22 10:54:34.829 [main] DEBUG nextflow.cli.Launcher - $> nextflow run labsyspharm/mcmicro/exemplar.nf --name exemplar-002 --path ./
+Feb-22 10:54:34.909 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 21.10.6
+Feb-22 10:54:35.761 [main] DEBUG nextflow.scm.AssetManager - Git config: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/.git/config; branch: master; remote: origin; url: https://github.com/labsyspharm/mcmicro.git
+Feb-22 10:54:35.779 [main] DEBUG nextflow.scm.AssetManager - Git config: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/.git/config; branch: master; remote: origin; url: https://github.com/labsyspharm/mcmicro.git
+Feb-22 10:54:35.899 [main] INFO  nextflow.cli.CmdRun - Launching `labsyspharm/mcmicro` [evil_payne] - revision: d6be0b81d7 [master]
+Feb-22 10:54:36.408 [main] INFO  nextflow.scm.AssetManager - NOTE: Your local project version looks outdated - a different revision is available in the remote repository [a5d547e868]
+Feb-22 10:54:36.422 [main] DEBUG nextflow.config.ConfigBuilder - Found config base: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/nextflow.config
+Feb-22 10:54:36.424 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/nextflow.config
+Feb-22 10:54:36.442 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Feb-22 10:54:36.658 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; plugins-dir=/home/moritzneesen/.nextflow/plugins
+Feb-22 10:54:36.660 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Feb-22 10:54:36.686 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Feb-22 10:54:36.690 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Feb-22 10:54:36.695 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Feb-22 10:54:36.719 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Feb-22 10:54:36.776 [main] DEBUG nextflow.Session - Session uuid: e08ec40b-15ef-448e-972f-d070ea93270d
+Feb-22 10:54:36.777 [main] DEBUG nextflow.Session - Run name: evil_payne
+Feb-22 10:54:36.778 [main] DEBUG nextflow.Session - Executor pool size: 8
+Feb-22 10:54:36.814 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 21.10.6 build 5660
+  Created: 21-12-2021 16:55 UTC (17:55 CEST)
+  System: Linux 5.10.16.3-microsoft-standard-WSL2
+  Runtime: Groovy 3.0.9 on OpenJDK 64-Bit Server VM 11.0.13+8-Ubuntu-0ubuntu1.20.04
+  Encoding: UTF-8 (UTF-8)
+  Process: 3675@DESKTOP-7177DQE [127.0.1.1]
+  CPUs: 8 - Mem: 12.2 GB (8.4 GB) - Swap: 4 GB (4 GB)
+Feb-22 10:54:36.852 [main] DEBUG nextflow.Session - Work-dir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work [v9fs]
+Feb-22 10:54:36.852 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/bin
+Feb-22 10:54:36.862 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Feb-22 10:54:36.875 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Feb-22 10:54:36.949 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 9; maxThreads: 1000
+Feb-22 10:54:37.110 [main] DEBUG nextflow.Session - Session start invoked
+Feb-22 10:54:37.137 [main] DEBUG nextflow.Session - Using default localLib path: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/lib
+Feb-22 10:54:37.142 [main] DEBUG nextflow.Session - Adding to the classpath library: /home/moritzneesen/.nextflow/assets/labsyspharm/mcmicro/lib
+Feb-22 10:54:37.465 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Feb-22 10:54:37.615 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-22 10:54:37.616 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-22 10:54:37.625 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Feb-22 10:54:37.634 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=12.2 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
+Feb-22 10:54:37.666 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 9; maxThreads: 1000
+Feb-22 10:54:37.763 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-22 10:54:37.764 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-22 10:54:37.774 [main] DEBUG nextflow.Session - Workflow process names [dsl1]: getMarkers, getImages
+Feb-22 10:54:37.777 [main] DEBUG nextflow.script.ScriptRunner - > Await termination 
+Feb-22 10:54:37.778 [main] DEBUG nextflow.Session - Session await
+Feb-22 10:54:38.050 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.061 [Task submitter] INFO  nextflow.Session - [f8/9fdd51] Submitted process > getMarkers
+Feb-22 10:54:38.083 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.084 [Task submitter] INFO  nextflow.Session - [82/00e86a] Submitted process > getImages (3)
+Feb-22 10:54:38.104 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.106 [Task submitter] INFO  nextflow.Session - [e5/ef495a] Submitted process > getImages (8)
+Feb-22 10:54:38.125 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.127 [Task submitter] INFO  nextflow.Session - [28/fbd83a] Submitted process > getImages (1)
+Feb-22 10:54:38.144 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.145 [Task submitter] INFO  nextflow.Session - [e8/6cae86] Submitted process > getImages (6)
+Feb-22 10:54:38.163 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.166 [Task submitter] INFO  nextflow.Session - [25/ac6daf] Submitted process > getImages (4)
+Feb-22 10:54:38.185 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.187 [Task submitter] INFO  nextflow.Session - [cd/4b2379] Submitted process > getImages (5)
+Feb-22 10:54:38.209 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.212 [Task submitter] INFO  nextflow.Session - [e2/3a8d91] Submitted process > getImages (10)
+Feb-22 10:54:38.627 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 3; name: getMarkers; status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/f8/9fdd51a2eff6fc7f680a2d66beb042]
+Feb-22 10:54:38.640 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:54:38.641 [Task submitter] INFO  nextflow.Session - [c9/6e1ccc] Submitted process > getImages (2)
+Feb-22 10:54:38.699 [Task monitor] DEBUG n.util.BlockingThreadExecutorFactory - Thread pool name=FileTransfer; maxThreads=24; maxQueueSize=72; keepAlive=1m
+Feb-22 10:55:54.172 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 5; name: getImages (4); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/25/ac6daf161cadc25d7075dff946515c]
+Feb-22 10:55:54.188 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:55:54.189 [Task submitter] INFO  nextflow.Session - [ad/4dbe47] Submitted process > getImages (7)
+Feb-22 10:56:03.967 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: getImages (2); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/c9/6e1ccc7f1a518ade8cf8441f9b4d0a]
+Feb-22 10:56:03.980 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-22 10:56:03.981 [Task submitter] INFO  nextflow.Session - [ad/6d86b9] Submitted process > getImages (9)
+Feb-22 10:56:26.220 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 9; name: getImages (8); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/e5/ef495a20543e65fd877200377b2430]
+Feb-22 10:56:28.613 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 7; name: getImages (6); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/e8/6cae86bd313ce131042071fccce7c8]
+Feb-22 10:56:31.461 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 6; name: getImages (5); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/cd/4b2379f24e4bfaad147f654b4d747b]
+Feb-22 10:56:36.112 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 11; name: getImages (10); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/e2/3a8d912763ec85ad0045d464c5eb7d]
+Feb-22 10:57:18.330 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 4; name: getImages (3); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/82/00e86a4d41d805a87ddae567f538bd]
+Feb-22 10:57:28.262 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: getImages (1); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/28/fbd83a2c2afe9bc58f009a40482c55]
+Feb-22 10:58:13.973 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 8; name: getImages (7); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/ad/4dbe473e9fb8345b8e36e492b359e3]
+Feb-22 10:58:24.935 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 10; name: getImages (9); status: COMPLETED; exit: 0; error: -; workDir: /mnt/c/Users/draco/documents/schapiro_lab/mcmicrogui/mcmicro/raw_data/work/ad/6d86b9a61d0cc7c483d2837d4fb5c4]
+Feb-22 10:58:24.958 [main] DEBUG nextflow.Session - Session await > all process finished
+Feb-22 10:58:24.960 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Feb-22 10:58:24.990 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=11; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=20m 22s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=8; peakCpus=8; peakMemory=0; ]
+Feb-22 10:58:25.034 [main] DEBUG nextflow.CacheDB - Closing CacheDB done
+Feb-22 10:58:25.059 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
