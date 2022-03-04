@@ -11,6 +11,7 @@ numpy = "*"
 opencv-contrib-python = "*"
 jinja2 = "*"
 pyyaml = "*"
+scikit-image = "*"
 
 [dev-packages]
 pylint = "*"

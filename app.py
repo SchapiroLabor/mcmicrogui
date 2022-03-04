@@ -1,16 +1,25 @@
+from turtle import color
 import webbrowser as browser
 import os
 import re
 from pathlib import Path
-from collections import defaultdict
 
 
 import imageio
 import yaml
 from pandas import read_csv
+import plotly
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
-import cv2
+from skimage import (
+    filters,
+    measure,
+    color,
+    segmentation,
+)  # TODO do you need both skimage and cv2??
+from cv2 import GaussianBlur, resize, cvtColor, COLOR_BGR2GRAY
+
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -32,7 +41,7 @@ file_extensions = list(mcmicro_params["singleFormats"].keys()) + list(
 
 sample_name = mcmicro_params["sampleName"]
 
-regex = re.compile(r"^.*?:|\,.*$|'")
+regex = re.compile(r"^.*?:|\,.*$|'|graph")  # regex for cleaning up the modules
 modules = {
     key: re.sub(regex, "", str(value[0]))
     for key, value in mcmicro_params.items()
@@ -49,43 +58,55 @@ segmentation_path = Path(
 
 registration_path = Path(data_path + sample_name + "/registration")
 quantification_path = Path(data_path + sample_name + "/quantification")
+cores_path = Path(data_path + sample_name + "/qc/" + modules["moduleDearray"])
 
-max_img_size = (
+max_image_size = (
     104857600  # 100MB # the actual html ends up being much smaller, how? Plotly magic??
 )
 
 scale_factor = 1
 
+# helper function for loading data
+
+
+def read_csv_or_image_data(path: Path, pattern: str, file_ext):
+    """Reads data from the given paths
+
+    Args:
+        path (Path): Path from where files should be read
+        pattern (str): File names to look for
+        file_types (_type_): Files types to look for, currently accepts images and csv
+    """
+    if ".csv" in file_ext:
+        data = [read_csv(csv) for csv in path.rglob(pattern) if csv.suffix == ".csv"]
+
+    else:
+        data = [
+            imageio.imread(image)
+            for image in path.rglob(pattern)
+            if image.suffix in file_ext
+        ]
+    return data
+
+
 # load quantification csv
-
-quantification = [
-    read_csv(csv)
-    for csv in quantification_path.glob(modules["modulesPM"] + "-" + sample_name + "*")
-    if csv.suffix == ".csv"
-]
+quantification = read_csv_or_image_data(
+    quantification_path, modules["modulesPM"] + "-" + sample_name + "*", ".csv"
+)
 
 
-# loading images
-whole_image = [
-    imageio.imread(image)
-    for image in registration_path.rglob(sample_name + "*")
-    if image.suffix in file_extensions
-][0]
+# loading images TODO account for multiple files
+whole_image = read_csv_or_image_data(
+    registration_path, sample_name + "*", file_extensions
+)[0]
 
-segmentation_cells = [
-    imageio.imread(image)
-    for image in segmentation_path.rglob("cell*")
-    if image.suffix in file_extensions
-]
+segmentation_cells = read_csv_or_image_data(segmentation_path, "cell*", file_extensions)
 
-segmentation_nuclei = [
-    imageio.imread(image)
-    for image in segmentation_path.rglob("nuclei*")
-    if image.suffix in file_extensions
-]
+segmentation_nuclei = read_csv_or_image_data(
+    segmentation_path, "nuclei*", file_extensions
+)
+cores = read_csv_or_image_data(cores_path, "*", ".tif")[0]
 
-
-# assuming only a single registration image can exist
 
 num_cells = np.amax(segmentation_cells)
 num_nuclei = np.amax(segmentation_nuclei)
@@ -105,7 +126,7 @@ scaled_file_size = image_file_size
 scale_factor = 1
 
 # calculate scaling factor
-while scaled_file_size > max_img_size:
+while scaled_file_size > max_image_size:
     scale_factor = scale_factor * 0.98
     print("New scale factor: " + str(scale_factor))
     scaled_width = image_width * scale_factor
@@ -117,31 +138,34 @@ while scaled_file_size > max_img_size:
 # scale image
 
 scaled_image_size = (int(scaled_width), int(scaled_height))
-whole_image_resized = cv2.resize(whole_image, scaled_image_size)
-# read the quantification files
+whole_image_resized = resize(whole_image, scaled_image_size)
+cores_resized = resize(cores, scaled_image_size)
 
-# retrieve the number of cells from the segementation -> maximum pixel intensitiy
-
-
-# crop the brightest spot as a high res sample
 side_length = 500
-blurry_image = cv2.GaussianBlur(whole_image, (5, 5), 0)
-(minVal, maxVal, minLoc, maxLoc) = cv2.minMaxLoc(blurry_image)
-p1 = (int(maxLoc[0] - (side_length / 2)), int(maxLoc[1] - (side_length / 2)))
-p2 = (int(maxLoc[0] + (side_length / 2)), int(maxLoc[1] + (side_length / 2)))
+blurry_image = GaussianBlur(
+    whole_image, (5, 5), 0
+)  # blurring makes it less susceptible to outlier bright pixels
+
+maxLoc = np.unravel_index(np.argmax(blurry_image, axis=None), blurry_image.shape)
+p1 = (int(maxLoc[1] - (side_length / 2)), int(maxLoc[0] - (side_length / 2)))
+p2 = (int(maxLoc[1] + (side_length / 2)), int(maxLoc[0] + (side_length / 2)))
 high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
-# cv2.namedWindow("image", cv2.WINDOW_KEEPRATIO)
+high_res_segementation_mask = segmentation_cells[0][p1[1] : p2[1], p1[0] : p2[0]]
 
-# cv2.imshow("image", high_res_crop)
-# cv2.resizeWindow("image", 400, 400)
-# cv2.waitKey(0)
-# Determine where to split up the image
+high_res_segementation_mask_cleared = segmentation.clear_border(
+    high_res_segementation_mask
+)
+high_res_segementation_mask_label = measure.label(high_res_segementation_mask_cleared)
 
+segmentation_label_overlay = color.label2rgb(
+    high_res_segementation_mask_label, image=high_res_crop, bg_label=0
+)
 
-# Create plotly plot for the resized image
+fig3 = px.imshow(segmentation_label_overlay)
 
 fig1 = px.imshow(whole_image_resized)
 fig2 = px.imshow(high_res_crop)
+
 fig1.write_html(
     "html/figures/zoomable_image.html",
     config={"doubleClick": "reset", "scrollZoom": True, "displayModeBar": True},
@@ -149,6 +173,11 @@ fig1.write_html(
 
 fig2.write_html(
     "html/figures/high_res.html",
+    config={"doubleClick": "reset", "scrollZoom": False, "displayModeBar": False},
+)
+
+fig3.write_html(
+    "html/figures/segmentation.html",
     config={"doubleClick": "reset", "scrollZoom": False, "displayModeBar": False},
 )
 
