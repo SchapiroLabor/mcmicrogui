@@ -3,3 +3,5 @@
 *.sh
 /data/work/*
 /data/.nextflow
+code dump.py
+classes.py

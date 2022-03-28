@@ -12,6 +12,10 @@ opencv-contrib-python = "*"
 jinja2 = "*"
 pyyaml = "*"
 scikit-image = "*"
+matplotlib = "*"
+imutils = "*"
+sklearn = "*"
+heroicons = {extras = ["jinja"], version = "*"}
 
 [dev-packages]
 pylint = "*"
