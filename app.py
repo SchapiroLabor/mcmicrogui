@@ -1,12 +1,15 @@
 # IMPORTS
+"""This script reads output data from MCMICRO and generates a report in the form of an html file."""
+
+
+from distutils import core
 import webbrowser as browser
 import os
 import re
 from pathlib import Path
 import timeit
-import cv2
 import imageio
-from matplotlib.figure import Figure
+
 import yaml
 import pandas as pd
 import plotly.express as px
@@ -37,12 +40,13 @@ default_plot_layout = {
     "paper_bgcolor": "rgba(0,0,0,0)",
 }
 
+tma_mode = True
 
 # FUNCTIONS
 
 
 def read_csv_or_image_data(path: Path, pattern: str, file_ext, recursive=True):
-    """Reads data from the given paths
+    """Read matching data from the given path
 
     Args:
         path (Path): Path from where files should be read
@@ -74,8 +78,8 @@ def read_csv_or_image_data(path: Path, pattern: str, file_ext, recursive=True):
         return data
 
 
-def plot_core_overlay(image: np.array, mask: np.array) -> Figure:
-    """Plots an overlay of the TMA cores.
+def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
+    """Plot an overlay of TMA cores.
 
     Args:
         image (Array): the image that should be overlayed, as a numpy array
@@ -96,7 +100,7 @@ def plot_core_overlay(image: np.array, mask: np.array) -> Figure:
 
     # measure the properties of each core
     props = measure.regionprops(mask_cleared.astype(int), image)
-    properties = ["area", "eccentricity", "perimeter", "intensity_mean"]
+    properties = ["area", "perimeter", "intensity_mean"]
     # determine the amount of cores
     min = int(mask[np.nonzero(mask_cleared)].min())
     max = int(mask[np.nonzero(mask_cleared)].max())
@@ -104,14 +108,23 @@ def plot_core_overlay(image: np.array, mask: np.array) -> Figure:
     # and display the properties of the label in the hover of this trace.
     for i in range(min, max + 1):
         try:
+            cells_per_core = quantification[i - 1]["CellID"].max()
+        except IndexError:
+            if i <= max:
+                cells_per_core = "NOT FOUND"
+                print(
+                    f"[report] Can not find quantification data for core #{i}. Please check if /quantification contains a valid .csv file for each core."
+                )
+            else:
+                pass
+        try:
+
             # Find contours
             y, x = measure.find_contours(mask_cleared == i, 0.5)[0].T
             # retrieve corresponding properties
-            hoverinfo = ""
+            hoverinfo = f"<b>Number of cells: {cells_per_core}</b><br>"
             for prop_name in properties:
-                hoverinfo += (
-                    f"<b>{prop_name}: {getattr(props[index], prop_name):.2f}</b><br>"
-                )
+                hoverinfo += f"<b>{prop_name} (downscaled): {getattr(props[index], prop_name):.2f}</b><br>"
             # plot the core
             fig.add_trace(
                 go.Scatter(
@@ -126,7 +139,9 @@ def plot_core_overlay(image: np.array, mask: np.array) -> Figure:
                 )
             )
         except IndexError:
-            print(f"Can not find contour on mask {i}")
+            print(
+                f"Can not find contour for core {i}. Please check if /dearray/masks contains a valid mask for each core."
+            )
 
     # return plot
     return fig
@@ -139,10 +154,10 @@ def plot_cell_contours_plotly(
     marker: str,
     cutoff: int,
     show_bg: bool = True,
-    color_above_cutoff: str = "lightblue",
-    color_below_cutoff: str = "red",
-) -> Figure:
-    """_summary_
+    color_above_cutoff: str = "orangered",
+    color_below_cutoff: str = "green",
+) -> go.Figure:
+    """Plot a segmentation overlay of cells
 
     Args:
         im (np.array): an image to plot a cell overlay on
@@ -203,13 +218,13 @@ def plot_cell_contours_plotly(
 
     # return plot
     print(
-        f"[report] Can not find contours for {error_counter} cells. Did you provide a valid mask?"
+        f"[report] Can not find contours for {error_counter} cells. Please check if /segmentation contains a valid cell segmentation mask."
     )
     return fig
 
 
 def overlay_images_at_centroid(bg: np.array, fg: np.array, cen_y: float, cen_x: float):
-    """Overlays two image arrays at a center point
+    """Overlay two image arrays at a center point
 
     Args:
         bg (np.array): Background image as array
@@ -356,7 +371,7 @@ single_core_masks = read_csv_or_image_data(
 )
 # scale the (smaller) masks to the size of the actual cores
 for index, mask in enumerate(single_core_masks):
-    single_core_masks[index] = cv2.resize(mask, cores[index].shape)
+    single_core_masks[index] = resize(mask, cores[index].shape)
 
 # prepare an empty image to fill with core masks in the next steps
 whole_core_mask = np.zeros(whole_image.shape)
@@ -483,7 +498,13 @@ Overview_plot.update_layout(
 
 
 # TMA
-TMA_plot = plot_core_overlay(whole_image_resized, whole_core_mask_resized)
+if tma_mode:
+    TMA_plot = plot_core_overlay(whole_image_resized, whole_core_mask_resized)
+    TMA_text = "Image"
+else:
+    TMA_text = (
+        "TMA mode off or no TMA provided. Run MCMICRO with --tma to process TMA data."
+    )
 
 # Segmentation
 segmentation_plot = plot_cell_contours_plotly(
@@ -500,11 +521,14 @@ Overview_html = Overview_plot.to_html(
     full_html=False,
 )
 
-# sTMA
-TMA_html = TMA_plot.to_html(
-    config={"doubleClick": "reset", "scrollZoom": True, "displayModeBar": False},
-    full_html=False,
-)
+# TMA
+if tma_mode:
+    TMA_html = TMA_plot.to_html(
+        config={"doubleClick": "reset", "scrollZoom": True, "displayModeBar": False},
+        full_html=False,
+    )
+else:
+    TMA_html = ""
 
 # Segmentation
 segmentation_html = segmentation_plot.to_html(
@@ -523,6 +547,7 @@ html_parameters = {
     "Overview": Overview_html,
     "TMA": TMA_html,
     "Segmentation": segmentation_html,
+    "TMA_text": TMA_text,
 }
 
 # read the jinja template

@@ -342,9 +342,11 @@
     <div class="figure_bg">
       <!--This gets rendered:-->
       <div class="subtitle_bg">
-        <h4>Image</h4>
+        <h4>{{html_parameters["TMA_text"]}}</h4>
       </div>
-      <div class="plotcontainer">{{html_parameters["TMA"]|safe }}</div>
+      <div class="plotcontainer">
+        {{html_parameters["TMA"]|safe }}
+      </div>
     </div>
   </div>
 
