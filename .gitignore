@@ -1,6 +1,7 @@
 *.tif
 *.tiff
 *.sh
-/data/*
+data/*
 code dump.py
 classes.py
+.vscode
