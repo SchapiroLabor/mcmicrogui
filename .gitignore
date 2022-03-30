@@ -1,7 +1,6 @@
 *.tif
 *.tiff
 *.sh
-/data/work/*
-/data/.nextflow
+/data/*
 code dump.py
 classes.py
