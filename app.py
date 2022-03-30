@@ -39,7 +39,6 @@ default_plot_layout = {
     "paper_bgcolor": "rgba(0,0,0,0)",
 }
 
-tma_mode = True
 
 # FUNCTIONS
 
@@ -52,29 +51,39 @@ def read_csv_or_image_data(path: Path, pattern: str, file_ext, recursive=True):
         pattern (str): File names to look for
         file_types (_type_): Files types to look for, currently accepts images and csv
     """
-    if ".csv" in file_ext and recursive == True:
-        data = [pd.read_csv(csv) for csv in path.rglob(pattern) if csv.suffix == ".csv"]
-        return data
+    try:
+        if ".csv" in file_ext and recursive == True:
+            data = [
+                pd.read_csv(csv) for csv in path.rglob(pattern) if csv.suffix == ".csv"
+            ]
 
-    if ".csv" in file_ext and recursive == False:
-        data = [pd.read_csv(csv) for csv in path.glob(pattern) if csv.suffix == ".csv"]
-        return data
+        if ".csv" in file_ext and recursive == False:
+            data = [
+                pd.read_csv(csv) for csv in path.glob(pattern) if csv.suffix == ".csv"
+            ]
 
-    if ".csv" not in file_ext and recursive == True:
-        data = [
-            imageio.imread(image)
-            for image in path.rglob(pattern)
-            if image.suffix in file_ext
-        ]
-        return data
+        if ".csv" not in file_ext and recursive == True:
+            data = [
+                imageio.imread(image)
+                for image in path.rglob(pattern)
+                if image.suffix in file_ext
+            ]
 
-    if ".csv" not in file_ext and recursive == False:
-        data = [
-            imageio.imread(image)
-            for image in path.glob(pattern)
-            if image.suffix in file_ext
-        ]
-        return data
+        if ".csv" not in file_ext and recursive == False:
+            data = [
+                imageio.imread(image)
+                for image in path.glob(pattern)
+                if image.suffix in file_ext
+            ]
+        if data == []:
+            raise FileNotFoundError
+        else:
+            return data
+    except FileNotFoundError:
+        print(
+            f"[report] ERROR: No valid files found in {path}. Please check that the path exists and contains files of the types {file_ext+ ['.csv']}."
+        )
+        quit()
 
 
 def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
@@ -276,9 +285,17 @@ params_paths = [
 ]  # globbing just in case there are mulltiple parameter files
 
 # open the parameter yaml
+
+if params_paths == []:
+    print(
+        "[report] ERROR: MCMICRO parameter file not found or could not be read. Please check /data/qc for a valid params.yml and rerun the script."
+    )
+    quit()
+
 for path in params_paths:
     with open(path, "r") as f:
         mcmicro_params = yaml.safe_load(f)
+
 
 # read valid file extensions from parameter file
 file_extensions = list(mcmicro_params["singleFormats"].keys()) + list(
@@ -317,17 +334,27 @@ cores_path = Path(data_path + sample_name + "/dearray/")
 core_masks_path = Path(data_path + sample_name + "/dearray/masks")
 core_centroid_path = Path(data_path + sample_name + "/qc/coreo/centroidsY-X.txt")
 
+if cores_path.is_dir == True:
+    print("[report] dearray folder detected. Assuming TMA data.")
+    tma_mode = True
+else:
+    tma_mode = False
 
 # load quantification csv(s)
 quantification = read_csv_or_image_data(
     quantification_path, modules["modulesPM"] + "-" + sample_name + "*", ".csv"
 )
 
-# loading images TODO account for multiple files
-whole_image = read_csv_or_image_data(
-    registration_path, sample_name + "*", file_extensions
-)[0]
-
+# loading images TODO Can there be multiple registration images?
+try:
+    whole_image = read_csv_or_image_data(
+        registration_path, sample_name + "*", file_extensions
+    )[0]
+except IndexError:
+    print(
+        "[report] ERROR: Registration image not found or could not be read. Please check /data/registration for a valid image and rerun the script."
+    )
+    quit()
 # load segementation masks
 segmentation_cells = read_csv_or_image_data(segmentation_path, "cell*", file_extensions)
 
@@ -439,7 +466,7 @@ maxLoc = np.unravel_index(np.argmax(blurry_image, axis=None), blurry_image.shape
 # calculate the corners of a square around maxLoc
 p1 = (int(maxLoc[1] - (side_length / 2)), int(maxLoc[0] - (side_length / 2)))
 p2 = (int(maxLoc[1] + (side_length / 2)), int(maxLoc[0] + (side_length / 2)))
-
+# TODO account for multiple images
 # subset the images + masks with the corner points
 high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
 high_res_segmentation_mask_cells = segmentation_cells[0][p1[1] : p2[1], p1[0] : p2[0]]
