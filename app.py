@@ -334,10 +334,13 @@ cores_path = Path(data_path + sample_name + "/dearray/")
 core_masks_path = Path(data_path + sample_name + "/dearray/masks")
 core_centroid_path = Path(data_path + sample_name + "/qc/coreo/centroidsY-X.txt")
 
-if cores_path.is_dir == True:
+
+# Check for dearray folder to determine if TMA or not
+if cores_path.is_dir() is True:
     print("[report] dearray folder detected. Assuming TMA data.")
     tma_mode = True
 else:
+    print("[report] No dearray folder detected. Assuming whole slide data.")
     tma_mode = False
 
 # load quantification csv(s)
