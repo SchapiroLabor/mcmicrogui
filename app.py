@@ -2,7 +2,6 @@
 """This script reads output data from MCMICRO and generates a report in the form of an html file."""
 
 
-from distutils import core
 import webbrowser as browser
 import os
 import re
@@ -476,7 +475,11 @@ Overview_plot.update_layout(
                         label="High res sample",
                         method="update",
                         # new data to display when the button is chosen
-                        args=[{"z": [high_res_crop]}],
+                        args=[
+                            {
+                                "z": [high_res_crop],
+                            }
+                        ],
                     ),
                 ]
             ),
@@ -542,6 +545,7 @@ segmentation_html = segmentation_plot.to_html(
 
 # parameters for the jinja template
 html_parameters = {
+    "num_cores": num_cores,
     "num_cells": num_cells,
     "num_nuclei": num_nuclei,
     "Overview": Overview_html,
