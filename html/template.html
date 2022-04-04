@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"> 
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      background-color: #F7F7F7;
+    }
+
+    
+
+    .background {
+      position: absolute;
+      height: 100%;
+      width: 296px;
+      background-color: #FFFFFF;
+      z-index: 1;
+    }
+
+    .figure_bg {
+      position: absolute;
+      width: 1168px;
+      height: 528px;
+      left: 320px;
+      top: 172px;
+
+      /* Light/Background/Primary */
+
+      background: #FFFFFF;
+      /* Light/Drop Shadow/2 */
+
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 2px 1px rgba(0, 0, 0, 0.06), 0px 1px 1px rgba(0, 0, 0, 0.08);
+      border-radius: 8px;
+    }
+
+    /* Style the tab */
+    .tab {
+      position: relative;
+      top: 54px;
+      float: left;
+      width: 280px;
+      z-index: 2;
+
+
+    }
+
+    /* Style the buttons that are used to open the tab content */
+    .tab button {
+      display: inline-block;
+      background-color: inherit;
+      color: black;
+      padding-right: 12px;
+      padding-left: 12px;
+      width: 100%;
+      border: none;
+      outline: none;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.3s;
+      height: 44px;
+      border-radius: 8px;
+    }
+
+    /* Change background color of buttons on hover */
+    .tab button:hover {
+      background: linear-gradient(0deg, rgba(0, 133, 255, 0.1), rgba(0, 133, 255, 0.1)), #FFFFFF;
+      color: #1C1C1C;
+    }
+
+    /* Create an active/current "tab button" class */
+    .tab button.active {
+      background: linear-gradient(0deg, rgba(0, 133, 255, 0.1), rgba(0, 133, 255, 0.1)), #FFFFFF;
+      color: #1C1C1C;
+    }
+
+    /* Style the tab content */
+    .tabcontent {
+      float: left;
+      padding: 0px 12px;
+      border: 0px solid #ccc;
+      width: 70%;
+      border-left: none;
+      height: 100%;
+      z-index: 2
+    }
+
+    /* Logo */
+    .logo {
+      position: relative;
+      width: 280px;
+      height: 42px;
+      left: 4px;
+      top: 10px;
+      background: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Generator: Adobe Illustrator 25.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0) --%3E%3Csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='739.1px' height='115.8px' viewBox='0 0 739.1 115.8' style='enable-background:new 0 0 739.1 115.8;' xml:space='preserve' %3E%3Cstyle type='text/css'%3E .st0%7Bfill:%2300A1E1;%7D .st1%7Bfill:%230066BA;%7D .st2%7Bfill:%239EA9AE;%7D%0A%3C/style%3E%3Cpath class='st0' d='M111.3,113.5H85.9V48.8L55.7,98.4L25.5,48.8v64.7H0V2.2h25.4l30.2,49.5L85.8,2.2h25.4v111.3H111.3z'/%3E%3Cpath class='st1' d='M125.6,57.9c0-32.8,24.3-57.9,57.9-57.9c20.2,0,38,10,47.7,25.8l-22,12.7c-4.9-8.6-14.5-13.7-25.8-13.7 C163.7,24.8,151,38,151,57.9S163.7,91,183.4,91c11.3,0,21-5.1,25.8-13.7l22,12.7c-9.5,15.7-27.4,25.8-47.7,25.8 C149.9,115.8,125.6,90.6,125.6,57.9z'/%3E%3Cpath class='st2' d='M354.5,113.5h-25.4V48.8l-30.2,49.6l-30.2-49.6v64.7h-25.4V2.2h25.4l30.2,49.5l30.2-49.5h25.4V113.5z'/%3E%3Cpath class='st2' d='M399,2.2v111.3h-25.5V2.2H399z'/%3E%3Cpath class='st2' d='M413.3,57.9c0-32.8,24.3-57.9,57.9-57.9c20.2,0,38,10,47.7,25.8l-22,12.7c-4.9-8.6-14.5-13.7-25.8-13.7 c-19.7,0-32.4,13.2-32.4,33.1S451.4,91,471.1,91c11.3,0,21-5.1,25.8-13.7l22,12.7c-9.5,15.7-27.4,25.8-47.7,25.8 C437.6,115.8,413.3,90.6,413.3,57.9z'/%3E%3Cpath class='st2' d='M568.3,76.9h-12.1v36.6h-25.4V2.2h44.5c21.2,0,38.2,17,38.2,38.2c0,13.7-8.3,26.1-20.5,32.3l23.7,40.9h-27.4 L568.3,76.9z M556.3,54.7h19.1c7,0,12.7-6.2,12.7-14.3s-5.7-14.3-12.7-14.3h-19.1V54.7z'/%3E%3Ccircle class='st2' cx='681.2' cy='57.9' r='57.9'/%3E%3Ccircle class='st0' cx='681.2' cy='57.9' r='33.3'/%3E%3Ccircle class='st1' cx='681.2' cy='57.9' r='12'/%3E%3C/svg%3E%0A");
+      background-size: contain;
+      background-repeat: no-repeat;
+      z-index: 2;
+    }
+
+
+
+    h1 {
+      /* Heading / H1 - 48 */
+
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 48px;
+      line-height: 60px;
+
+
+
+      /* Light/Grayscale/100 */
+
+      color: #1C1C1C;
+    }
+
+    h2 {
+      /* Heading / H2 - 36 */
+
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 48px;
+      /* identical to box height, or 133% */
+
+
+      /* Light/Grayscale/100 */
+
+      color: #1C1C1C;
+    }
+
+    h4 {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 20px;
+      line-height: 28px;
+    }
+
+    p {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    .menutext {
+      /* Heading / H5 - 16 */
+
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 24px;
+      /* identical to box height, or 150% */
+
+
+      /* Light/Grayscale/100 */
+
+      color: #585757;
+    }
+
+    .menutext:hover {
+      background: linear-gradient(0deg, rgba(0, 133, 255, 0.1), rgba(0, 133, 255, 0.1)), #FFFFFF;
+      color: #1C1C1C;
+    }
+
+    /* Create an active/current "tab button" class */
+    .menutext:active a {
+      background: linear-gradient(0deg, rgba(0, 133, 255, 0.1), rgba(0, 133, 255, 0.1)), #FFFFFF;
+      color: #1C1C1C;
+    }
+
+    .mainmenu {
+      /* main menu */
+
+      /* Caps / Caps 2 - 12 Regular */
+
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 16px;
+      /* identical to box height, or 133% */
+
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+
+      /* Light/Grayscale/300 */
+
+      color: #969696;
+    }
+
+    .mainmenu_bg {
+      /* main menu */
+
+      padding-left: 24px;
+      position: relative;
+      width: 240px;
+      height: 24px;
+
+      z-index: 2;
+
+    }
+
+    .title_bg {
+      /* main menu */
+
+      position: absolute;
+      width: 164px;
+      height: 48px;
+      left: 344px;
+      top: 54px;
+
+      z-index: 2;
+
+    }
+
+    .subtitle_bg {
+      /* main menu */
+
+      top: 24px;
+      left: 24px;
+      position: relative;
+      float: left;
+      z-index: 2;
+
+
+
+    }
+
+    .plotcontainer {
+      /* main menu */
+      top: 32px;
+      position: relative;
+      float: left;
+      z-index: 2;
+
+    }
+
+    .numbercontainer {
+      /* main menu */
+      top: 44px;
+      bottom: 44px;
+      right: 240px;
+      position: relative;
+      float: right;
+      z-index: 2;
+
+    }
+  </style>
+</head>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+  //JS for the tabs
+  window.onload = function () {
+    document.getElementById("defaultOpen").click();
+  };
+  function openTab(evt, tabName) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+
+</script>
+
+
+<body>
+
+  <!-- MC MICRO Logo svg code -->
+  <div class="background">
+    <div class="logo">
+    </div>
+
+
+    <!-- Tab links -->
+    <div class="tab">
+      <div class="mainmenu_bg">
+        <div class="mainmenu">
+          MAIN MENU
+        </div>
+      </div>
+      <button class="tablinks" onclick="openTab(event, 'Overview')" id="defaultOpen">
+        <div class="menutext">Overview</div>
+      </button>
+      <button class="tablinks" onclick="openTab(event, 'TMA')">
+        <div class="menutext">TMA</div>
+      </button>
+      <button class="tablinks" onclick="openTab(event, 'Segmentation')">
+        <div class="menutext">Segmentation</div>
+      </button>
+    </div>
+  </div>
+  <!-- Tab content -->
+  <div id="Overview" class="tabcontent">
+    <div class="title_bg">
+      <h2 style=>Overview</h2>
+    </div>
+    <div class="figure_bg">
+      <div class="subtitle_bg">
+        <h4>Image</h4>
+      </div>
+      <div class="plotcontainer">{{html_parameters["Overview"]|safe }}</div>
+      <div class="numbercontainer">
+        <h1>{{html_parameters["num_cores"]}}</h1>
+        <p>Cores</p>
+        <h1>{{ html_parameters["num_cells"] }}</h1>
+        <p>Cells</p>
+        <h1>{{ html_parameters["num_nuclei"] }}</h1>
+        <p>Nuclei</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="TMA" class="tabcontent">
+    <div class="title_bg">
+      <h2 style=>TMA</h2>
+    </div>
+    <div class="figure_bg">
+      <!--This gets rendered:-->
+      <div class="subtitle_bg">
+        <h4>{{html_parameters["TMA_text"]}}</h4>
+      </div>
+      <div class="plotcontainer">
+        {{html_parameters["TMA"]|safe }}
+      </div>
+    </div>
+  </div>
+
+  <div id="Segmentation" class="tabcontent">
+    <div class="title_bg">
+      <h2 style=>Segmentation</h2>
+    </div>
+    <div class="figure_bg">
+      <!--This gets rendered:-->
+      <div class="subtitle_bg">
+        <h4>Image</h4>
+      </div>
+      <div class="plotcontainer">{{html_parameters["Segmentation"]|safe }}</div>
+    </div>
+  </div>
+
+  </div>
+
+</body>
+
+</html>
