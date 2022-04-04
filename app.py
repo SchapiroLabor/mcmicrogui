@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 import timeit
 import imageio
+import sys
 
 import yaml
 import pandas as pd
@@ -279,7 +280,8 @@ scale_factor = 1
 side_length = 500
 
 # find MCMICRO parameter yaml file
-data_path = "data/"
+#data_path = "data/"
+data_path = sys.argv[1]
 params_paths = [
     path for path in Path("data").rglob("*.yml")
 ]  # globbing just in case there are mulltiple parameter files
