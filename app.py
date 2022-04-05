@@ -2,12 +2,14 @@
 """This script reads output data from MCMICRO and generates a report in the form of an html file."""
 
 
+from ast import arg
 import webbrowser as browser
 import os
 import re
 from pathlib import Path
 import timeit
 import imageio
+import argparse
 
 import yaml
 import pandas as pd
@@ -31,6 +33,21 @@ print("[report] Generating report")
 # jinja config
 env = Environment(loader=FileSystemLoader("./"))
 
+# parse command line arguments for input and output
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-i:",
+    "--input",
+    type=str,
+    help="Location of the input data folder to read",
+)
+parser.add_argument(
+    "-o:",
+    "--output",
+    type=str,
+    help="Location where to output the report html file",
+)
+args = parser.parse_args()
 # set default parameter for plotly plots
 default_plot_layout = {
     "height": 500,
@@ -81,7 +98,7 @@ def read_csv_or_image_data(path: Path, pattern: str, file_ext, recursive=True):
             return data
     except FileNotFoundError:
         print(
-            f"[report] ERROR: No valid files found in {path}. Please check that the path exists and contains files of the types {file_ext+ ['.csv']}."
+            f"[report] ERROR: No valid files found in {path}. Please check that the path exists and contains files of the types {file_ext}, .csv."
         )
         quit()
 
@@ -121,7 +138,7 @@ def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
             if i <= max:
                 cells_per_core = "NOT FOUND"
                 print(
-                    f"[report] Can not find quantification data for core #{i}. Please check if /quantification contains a valid .csv file for each core."
+                    f"[report] Can not find quantification data for core #{i}. Please check if {str(quantification_path.resolve())} contains a valid .csv file for each core."
                 )
             else:
                 pass
@@ -148,7 +165,7 @@ def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
             )
         except IndexError:
             print(
-                f"Can not find contour for core {i}. Please check if /dearray/masks contains a valid mask for each core."
+                f"Can not find contour for core {i}. Please check if /dearray/masks in {data_path_abs} contains a valid mask for each core."
             )
 
     # return plot
@@ -226,7 +243,7 @@ def plot_cell_contours_plotly(
 
     # return plot
     print(
-        f"[report] Can not find contours for {error_counter} cells. Please check if /segmentation contains a valid cell segmentation mask."
+        f"[report] Can not find contours for {error_counter} cells. Please check if /segmentation contains a valid cell segmentation mask."  # TODO read path variable in error message
     )
     return fig
 
@@ -267,7 +284,15 @@ def overlay_images_at_centroid(bg: np.array, fg: np.array, cen_y: float, cen_x: 
 
 # READING/SETTING PARAMETERS AND FILES
 
-print("[report] Reading MCMICRO output")
+data_path = args.input
+data_path_abs = str(Path(data_path).resolve())
+
+print(f"[report] Reading MCMICRO output from {data_path_abs}")
+if not Path(data_path).is_dir():
+    print(
+        f"[report] ERROR: Input folder not found or could not be read. Please check if {data_path_abs} exists and contains the full valid output of MCMICRO"
+    )
+    quit()
 # set parameter for max image size, used for dynamic downscaling later on
 max_image_size = (
     104857600  # 100MB # the actual html ends up being much smaller, how? Plotly magic??
@@ -279,16 +304,17 @@ scale_factor = 1
 side_length = 500
 
 # find MCMICRO parameter yaml file
-data_path = "data/"
+
+
 params_paths = [
-    path for path in Path("data").rglob("*.yml")
+    path for path in Path(data_path).rglob("*.yml")
 ]  # globbing just in case there are mulltiple parameter files
 
 # open the parameter yaml
 
-if params_paths == []:
+if params_paths == []:  # TODO refactor exeption handling, too much redundancy
     print(
-        "[report] ERROR: MCMICRO parameter file not found or could not be read. Please check /data/qc for a valid params.yml and rerun the script."
+        f"[report] ERROR: MCMICRO parameter file not found or could not be read. Please check the /qc folder in {data_path_abs} for a valid params.yml and rerun the script."
     )
     quit()
 
@@ -305,24 +331,30 @@ file_extensions = list(mcmicro_params["singleFormats"].keys()) + list(
 # read the name of the image sample
 sample_name = mcmicro_params["sampleName"]
 
-# read the MCMICRO modules that were run from the parameter yaml
-regex = re.compile(r"^.*?:|\,.*$|'|graph")  # regex for cleaning up the modules
-# remove unnessecary parts from the module string
-modules = {
-    key: re.sub(regex, "", str(value[0]))
-    for key, value in mcmicro_params.items()
-    if "module" in key
-}
+# read the MCMICRO modules that were run from the parameter yaml - currently unused, as parameters are not yet displayed
+regex = re.compile(r"^.*?:")
+modules = {key: value for key, value in mcmicro_params.items() if "module" in key}
+segmentation_module_names = [
+    re.sub(regex, "", item[0]) for item in modules["modulesPM"]
+]
+segmentation_folder_names = [
+    f"{item}-{sample_name}" for item in segmentation_module_names
+]
+
 
 # assemble path to segmentation files
-segmentation_path = Path(
-    data_path
-    + sample_name
-    + "/segmentation/"
-    + modules["modulesPM"]
-    + "-"
-    + sample_name  # Can you run multiple segmetations algorithms?
-)
+segmentation_paths = [
+    Path(
+        data_path
+        + sample_name
+        + "/segmentation/"
+        + folder_name
+        # Can you run multiple segmetations algorithms?
+    )
+    for folder_name in segmentation_folder_names
+]
+segmentation_paths = [path for path in segmentation_paths if path.is_dir() == True]
+
 # assemble path to registration files
 registration_path = Path(data_path + sample_name + "/registration")
 
@@ -343,27 +375,31 @@ else:
     print("[report] No dearray folder detected. Assuming whole slide data.")
     tma_mode = False
 
-# load quantification csv(s)
+# load quantification csv(s) # TODO account for multiple files
 quantification = read_csv_or_image_data(
-    quantification_path, modules["modulesPM"] + "-" + sample_name + "*", ".csv"
+    quantification_path, "unmicst" + "-" + sample_name + "*", ".csv"
 )
 
-# loading images TODO Can there be multiple registration images?
+# loading images, assuming only one registration image can exist
 try:
     whole_image = read_csv_or_image_data(
         registration_path, sample_name + "*", file_extensions
     )[0]
-except IndexError:
+except IndexError:  # TODO refactor exeption handling, too much redundancy
     print(
-        "[report] ERROR: Registration image not found or could not be read. Please check /data/registration for a valid image and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {registration_path} for a valid image and rerun the script."
     )
     quit()
 # load segementation masks
-segmentation_cells = read_csv_or_image_data(segmentation_path, "cell*", file_extensions)
+segmentation_cells = [
+    read_csv_or_image_data(segmentation_path, "cell*", file_extensions)
+    for segmentation_path in segmentation_paths
+]
 
-segmentation_nuclei = read_csv_or_image_data(
-    segmentation_path, "nuclei*", file_extensions
-)
+segmentation_nuclei = [
+    read_csv_or_image_data(segmentation_path, "nuclei*", file_extensions)
+    for segmentation_path in segmentation_paths
+]
 
 # read coordinates of the TMA core centroids and format them into an array
 with open(core_centroid_path) as f:
@@ -385,8 +421,12 @@ core_centroids = np.array(core_centroids)
 num_cores = len(core_centroids)
 
 # determine number of cells from segmentation masks
-num_cells = np.amax(segmentation_cells)
-num_nuclei = np.amax(segmentation_nuclei)
+num_cells = np.amax(
+    segmentation_cells
+)  # TODO make it dynamic/selectable, only picks the first mask currently
+num_nuclei = np.amax(
+    segmentation_nuclei[0]
+)  # TODO make it dynamic/selectable, only picks the first mask currently
 
 
 # REASSEMBLING CORE MASK
@@ -472,8 +512,16 @@ p2 = (int(maxLoc[1] + (side_length / 2)), int(maxLoc[0] + (side_length / 2)))
 # TODO account for multiple images
 # subset the images + masks with the corner points
 high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
-high_res_segmentation_mask_cells = segmentation_cells[0][p1[1] : p2[1], p1[0] : p2[0]]
-high_res_segmentation_mask_nuclei = segmentation_nuclei[0][p1[1] : p2[1], p1[0] : p2[0]]
+high_res_segmentation_mask_cells = segmentation_cells[0][
+    0
+][  # TODO currently picks only the first image, make more dynamic in the future
+    p1[1] : p2[1], p1[0] : p2[0]
+]
+high_res_segmentation_mask_nuclei = segmentation_nuclei[0][
+    0
+][  # TODO currently picks only the first image, make more dynamic in the future
+    p1[1] : p2[1], p1[0] : p2[0]
+]
 
 
 # PLOTTING
@@ -535,9 +583,7 @@ if tma_mode:
     TMA_plot = plot_core_overlay(whole_image_resized, whole_core_mask_resized)
     TMA_text = "Image"
 else:
-    TMA_text = (
-        "TMA mode off or no TMA provided. Run MCMICRO with --tma to process TMA data."
-    )
+    TMA_text = "TMA mode off or no TMA data could be found. Run MCMICRO--tma to process TMA data."
 
 # Segmentation
 segmentation_plot = plot_cell_contours_plotly(
@@ -592,11 +638,12 @@ template = env.get_template(TEMPLATE_FILE)
 report_html_code = template.render(html_parameters=html_parameters)
 
 # write the report file
-with open("report.html", "w") as fh:
+output_path = Path(f"{args.output}/report.html")
+with open(output_path, "w") as fh:
     fh.write(report_html_code)
 
 # open it in the default browser
-browser.open("report.html")
+browser.open(output_path)
 
 # stop the timer
 stop = timeit.default_timer()
