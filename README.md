@@ -8,14 +8,8 @@
 
 3. Run MCMICRO on the data of your choice. Make sure the output ends up in the data folder in the downloaded repository.
 
-4. Run `pip install pipenv` in your terminal to install pipenv for easy package management.
+4. Run `pip install -r requirements.txt` to install all required packages
 
-5. Navigate to the project directory
+5. Run `python app.py` to launch the script.
 
-6. Run `pipenv shell` to activate pipenv
-
-7. Run `pipenv install` to install all required packages
-
-8. Run `python app.py` to launch the script.
-
-9. If you find any bugs, open an issue on github and write me a message on slack :)
+6. If you find any bugs, open an issue on github and write me a message on slack :)
