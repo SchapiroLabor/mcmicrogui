@@ -5,3 +5,5 @@ data/*
 code dump.py
 classes.py
 /.vscode
+Pipfile
+Pipfile.lock

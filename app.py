@@ -1,16 +1,14 @@
 # IMPORTS
 """This script reads output data from MCMICRO and generates a report in the form of an html file."""
 
-
-from ast import arg
 import webbrowser as browser
 import os
 import re
 from pathlib import Path
+from glob import glob
 import timeit
 import imageio
 import argparse
-
 import yaml
 import pandas as pd
 import plotly.express as px
@@ -58,49 +56,6 @@ default_plot_layout = {
 
 
 # FUNCTIONS
-
-
-def read_csv_or_image_data(path: Path, pattern: str, file_ext, recursive=True):
-    """Read matching data from the given path
-
-    Args:
-        path (Path): Path from where files should be read
-        pattern (str): File names to look for
-        file_types (_type_): Files types to look for, currently accepts images and csv
-    """
-    try:
-        if ".csv" in file_ext and recursive == True:
-            data = [
-                pd.read_csv(csv) for csv in path.rglob(pattern) if csv.suffix == ".csv"
-            ]
-
-        if ".csv" in file_ext and recursive == False:
-            data = [
-                pd.read_csv(csv) for csv in path.glob(pattern) if csv.suffix == ".csv"
-            ]
-
-        if ".csv" not in file_ext and recursive == True:
-            data = [
-                imageio.imread(image)
-                for image in path.rglob(pattern)
-                if image.suffix in file_ext
-            ]
-
-        if ".csv" not in file_ext and recursive == False:
-            data = [
-                imageio.imread(image)
-                for image in path.glob(pattern)
-                if image.suffix in file_ext
-            ]
-        if data == []:
-            raise FileNotFoundError
-        else:
-            return data
-    except FileNotFoundError:
-        print(
-            f"[report] ERROR: No valid files found in {path}. Please check that the path exists and contains files of the types {file_ext}, .csv."
-        )
-        quit()
 
 
 def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
@@ -199,7 +154,6 @@ def plot_cell_contours_plotly(
     """
     # Reset index so the CellID is the index
     data = data.set_index("CellID")
-
     # Cell
     flag = data[marker].apply(lambda x: marker if x >= cutoff else "")
     color = data[marker].apply(
@@ -207,8 +161,8 @@ def plot_cell_contours_plotly(
     )
 
     # Get range of cells
-    min = mask[np.nonzero(mask)].min()
-    max = mask[np.nonzero(mask)].max()
+    min = int(mask[np.nonzero(mask)].min())
+    max = int(mask[np.nonzero(mask)].max())
 
     # Plot masked marker
     if show_bg == False:
@@ -282,7 +236,7 @@ def overlay_images_at_centroid(bg: np.array, fg: np.array, cen_y: float, cen_x: 
     return bg
 
 
-# READING/SETTING PARAMETERS AND FILES
+# READING/SETTING PARAMETERS AND PATHS
 
 data_path = args.input
 data_path_abs = str(Path(data_path).resolve())
@@ -335,81 +289,122 @@ sample_name = mcmicro_params["sampleName"]
 regex = re.compile(r"^.*?:")
 modules = {key: value for key, value in mcmicro_params.items() if "module" in key}
 segmentation_module_names = [
-    re.sub(regex, "", item[0]) for item in modules["modulesPM"]
+    re.sub(regex, "", module[0]) for module in modules["modulesPM"]
 ]
-segmentation_folder_names = [
-    f"{item}-{sample_name}" for item in segmentation_module_names
-]
-
 
 # assemble path to segmentation files
-segmentation_paths = [
-    Path(
-        data_path
-        + sample_name
-        + "/segmentation/"
-        + folder_name
-        # Can you run multiple segmetations algorithms?
-    )
-    for folder_name in segmentation_folder_names
-]
-segmentation_paths = [path for path in segmentation_paths if path.is_dir() == True]
+segmentation_path = data_path + sample_name + "/segmentation/"
 
 # assemble path to registration files
-registration_path = Path(data_path + sample_name + "/registration")
+registration_path = data_path + sample_name + "/registration/"
 
 # assemble path to quantification files
-quantification_path = Path(data_path + sample_name + "/quantification")
+quantification_path = data_path + sample_name + "/quantification/"
 
 # assemble path to dearrayed cores + corresponding files
-cores_path = Path(data_path + sample_name + "/dearray/")
-core_masks_path = Path(data_path + sample_name + "/dearray/masks")
-core_centroid_path = Path(data_path + sample_name + "/qc/coreo/centroidsY-X.txt")
+cores_path = data_path + sample_name + "/dearray/"
+core_masks_path = data_path + sample_name + "/dearray/masks/"
+core_centroid_path = data_path + sample_name + "/qc/coreo/centroidsY-X.txt"
 
 
 # Check for dearray folder to determine if TMA or not
-if cores_path.is_dir() is True:
+if Path(cores_path).is_dir() is True:
     print("[report] dearray folder detected. Assuming TMA data.")
     tma_mode = True
 else:
     print("[report] No dearray folder detected. Assuming whole slide data.")
     tma_mode = False
 
+
+# READING FILES
+
+
 # load quantification csv(s) # TODO account for multiple files
-quantification = read_csv_or_image_data(
-    quantification_path, "unmicst" + "-" + sample_name + "*", ".csv"
-)
+quantification_dict = {}
+try:
+    for module in segmentation_module_names:
+        # find all image paths
+        quantification_dict[module] = [
+            Path(path) for path in glob(f"{quantification_path}{module}*")
+        ]
+        # read the images
+        quantification_dict[module] = [
+            pd.read_csv(path) for path in quantification_dict[module]
+        ]
+except (OSError, FileNotFoundError):
+    print(
+        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+    )
+    quit()
+
+
+# TEMPORARY SOLUTION UNTIL MULTIPLE IMAGE SELECTION/SEGMENTATION ALGORITHM COMPARISION IS IMPLEMENTED IN THE FRONTEND
+# TODO
+quantification = list(quantification_dict.values())[0]
+
 
 # loading images, assuming only one registration image can exist
 try:
-    whole_image = read_csv_or_image_data(
-        registration_path, sample_name + "*", file_extensions
-    )[0]
+    whole_image = [Path(path) for path in glob(f"{registration_path}*")]
+    image_file_size = os.path.getsize(
+        whole_image[0]
+    )  # get file size, used for downsampling later
+    whole_image = imageio.imread(whole_image[0])
 except IndexError:  # TODO refactor exeption handling, too much redundancy
     print(
         f"[report] ERROR: Registration image not found or could not be read. Please check {registration_path} for a valid image and rerun the script."
     )
     quit()
-# load segementation masks
-segmentation_cells = [
-    read_csv_or_image_data(segmentation_path, "cell*", file_extensions)
-    for segmentation_path in segmentation_paths
-]
 
-segmentation_nuclei = [
-    read_csv_or_image_data(segmentation_path, "nuclei*", file_extensions)
-    for segmentation_path in segmentation_paths
-]
+# load cell segementation masks
+# use a dictionary to associate the images with different segmentation algorithms
+segmentation_dict_cells = {}
+try:
+    for module in segmentation_module_names:
+        # find all image paths
+        segmentation_dict_cells[module] = [
+            Path(path) for path in glob(f"{segmentation_path}{module}*/cell*")
+        ]
+        # read the images
+        segmentation_dict_cells[module] = [
+            imageio.imread(imagepath) for imagepath in segmentation_dict_cells[module]
+        ]
+except (OSError, FileNotFoundError):
+    print(
+        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+    )
+    quit()
+
+# load nuclear segementation masks
+# use a dictionary to associate the images with different segmentation algorithms
+segmentation_dict_nuclei = {}
+try:
+    for module in segmentation_module_names:
+        # find all image paths
+        segmentation_dict_nuclei[module] = [
+            Path(path) for path in glob(f"{segmentation_path}{module}*/cell*")
+        ]
+        # read the images
+        segmentation_dict_nuclei[module] = [
+            imageio.imread(imagepath) for imagepath in segmentation_dict_nuclei[module]
+        ]
+
+except (OSError, FileNotFoundError):
+    print(
+        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+    )
+    quit()
 
 # read coordinates of the TMA core centroids and format them into an array
-with open(core_centroid_path) as f:
-    line = f.readlines()
-    core_centroids = [string.split() for string in line]
+if tma_mode:
+    with open(core_centroid_path) as f:
+        line = f.readlines()
+        core_centroids = [string.split() for string in line]
 
-core_centroids = [
-    [int(float(coordinate)) for coordinate in coordinate_pair]
-    for coordinate_pair in core_centroids
-]
+    core_centroids = [
+        [int(float(coordinate)) for coordinate in coordinate_pair]
+        for coordinate_pair in core_centroids
+    ]
 
 core_centroids = np.array(core_centroids)
 
@@ -418,58 +413,103 @@ core_centroids = np.array(core_centroids)
 
 
 # determine number of cores
-num_cores = len(core_centroids)
-
-# determine number of cells from segmentation masks
-num_cells = np.amax(
-    segmentation_cells
-)  # TODO make it dynamic/selectable, only picks the first mask currently
-num_nuclei = np.amax(
-    segmentation_nuclei[0]
-)  # TODO make it dynamic/selectable, only picks the first mask currently
+if tma_mode:
+    num_cores = len(core_centroids)
+else:
+    num_cores = "-"
 
 
-# REASSEMBLING CORE MASK
-
+# ASSMEBLING FULL IMAGE CORE MASK IF TMA
 
 # read the single core files
-cores = read_csv_or_image_data(cores_path, "*", file_extensions, recursive=False)
-# read the single core masks
-single_core_masks = read_csv_or_image_data(
-    core_masks_path, "*", file_extensions, recursive=False
-)
-# scale the (smaller) masks to the size of the actual cores
-for index, mask in enumerate(single_core_masks):
-    single_core_masks[index] = resize(mask, cores[index].shape)
+if tma_mode:
+    # find the filepaths
+    cores = [
+        Path(path) for path in glob(f"{cores_path}[!_mask]*")
+    ]  # TODO Can i use the exclude pattern in the path variable
+    # read the images
+    cores = [imageio.imread(imagepath) for imagepath in cores]
+    # read the single core masks
+    single_core_masks = [Path(path) for path in glob(f"{core_masks_path}*")]
+    single_core_masks = [imageio.imread(imagepath) for imagepath in single_core_masks]
+    # scale the (smaller) masks to the size of the actual cores
+    for index, mask in enumerate(single_core_masks):
+        single_core_masks[index] = resize(mask, cores[index].shape)
 
-# prepare an empty image to fill with core masks in the next steps
-whole_core_mask = np.zeros(whole_image.shape)
+    # prepare an empty image to fill with core masks in the next steps
+    whole_core_mask = np.zeros(whole_image.shape)
 
-# make each core mask distinct by assigning a specific pixel intensity to it, similar to the cell segmentation masks
-for index, mask in enumerate(single_core_masks):
-    mask[mask > 0] = index + 1
+    # make each core mask distinct by assigning a specific pixel intensity to it, similar to the cell segmentation masks
+    for index, mask in enumerate(single_core_masks):
+        mask[mask > 0] = index + 1
 
-# stich the mulitple single core masks together to one large core mask
-for index, core_centroid in enumerate(core_centroids):
-    whole_core_mask = overlay_images_at_centroid(
-        whole_core_mask,
-        single_core_masks[index],
-        core_centroids[index][0],
-        core_centroids[index][1],
-    )
+    # stich the mulitple single core masks together to one large core mask
+    for index, core_centroid in enumerate(core_centroids):
+        whole_core_mask = overlay_images_at_centroid(
+            whole_core_mask,
+            single_core_masks[index],
+            core_centroids[index][0],
+            core_centroids[index][1],
+        )
+else:
+    whole_core_mask = None
+
+
+# ASSEMBLING FULL IMAGE SEGMENTATION MASK IF TMA
+
+
+num_cells = 0
+num_nuclei = 0
+
+if tma_mode:
+
+    # prepare an empty image to fill with cell/nuclei core in the next steps
+    whole_core_mask_cells = np.zeros(whole_image.shape)
+    whole_core_mask_nuclei = np.zeros(whole_image.shape)
+
+    # prepare empty dicts to associate the whole image masks with different segmentation algorithms
+    segmentation_dict_cells_whole = {}
+    segmentation_dict_nuclei_whole = {}
+
+    # loop through the modules
+    for module in segmentation_dict_cells.keys():
+        if not segmentation_dict_cells[module] == []:
+            # loop through the core centroids and stich the mulitple single core masks together to one large core mask for the cells
+            for index, core_centroid in enumerate(core_centroids):
+
+                segmentation_dict_cells_whole[module] = overlay_images_at_centroid(
+                    whole_core_mask_cells,
+                    segmentation_dict_cells[module][index],
+                    core_centroids[index][0],
+                    core_centroids[index][1],
+                )
+                # determine number of cells from segmentation masks
+                num_cells = num_cells + np.amax(segmentation_dict_cells[module][index])
+
+            for index, core_centroid in enumerate(core_centroids):
+                segmentation_dict_nuclei_whole[module] = overlay_images_at_centroid(
+                    whole_core_mask_nuclei,
+                    segmentation_dict_nuclei[module][index],
+                    core_centroids[index][0],
+                    core_centroids[index][1],
+                )
+                # determine number of cores from segmentation masks
+                num_nuclei = num_nuclei + np.amax(
+                    segmentation_dict_nuclei[module][index]
+                )
+    # TEMPORARY SOLUTION UNTIL MULTIPLE IMAGE SELECTION/SEGMENTATION ALGORITHM COMPARISION IS IMPLEMENTED IN THE FRONTEND
+    # TODO
+    segmentation_cells = list(segmentation_dict_cells_whole.values())[0]
+    segmentation_nuclei = list(segmentation_dict_nuclei_whole.values())[0]
+else:
+    segmentation_cells = list(segmentation_dict_cells.values())[0]
+    segmentation_nuclei = list(segmentation_dict_nuclei.values())[0]
 
 
 # SCALING IMAGE
 
 
-# getting parameters for downscaling
-image_file_size = [
-    os.path.getsize(image) for image in Path(registration_path).rglob(sample_name + "*")
-][
-    0
-]  # assuming only a single registration image can exist TODO account for multiple ones?
-
-# getting image dimension + size
+# getting image dimensions
 image_width = whole_image.shape[0]
 image_height = whole_image.shape[1]
 image_size = whole_image.size
@@ -509,19 +549,14 @@ maxLoc = np.unravel_index(np.argmax(blurry_image, axis=None), blurry_image.shape
 # calculate the corners of a square around maxLoc
 p1 = (int(maxLoc[1] - (side_length / 2)), int(maxLoc[0] - (side_length / 2)))
 p2 = (int(maxLoc[1] + (side_length / 2)), int(maxLoc[0] + (side_length / 2)))
-# TODO account for multiple images
+
 # subset the images + masks with the corner points
 high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
-high_res_segmentation_mask_cells = segmentation_cells[0][
-    0
-][  # TODO currently picks only the first image, make more dynamic in the future
-    p1[1] : p2[1], p1[0] : p2[0]
+high_res_segmentation_mask_cells = segmentation_cells[
+    p1[1] : p2[1],
+    p1[0] : p2[0],
 ]
-high_res_segmentation_mask_nuclei = segmentation_nuclei[0][
-    0
-][  # TODO currently picks only the first image, make more dynamic in the future
-    p1[1] : p2[1], p1[0] : p2[0]
-]
+high_res_segmentation_mask_nuclei = segmentation_nuclei[p1[1] : p2[1], p1[0] : p2[0]]
 
 
 # PLOTTING
@@ -529,7 +564,7 @@ high_res_segmentation_mask_nuclei = segmentation_nuclei[0][
 
 # prepare overview figure
 Overview_plot = go.Figure()
-Overview_plot.add_trace(go.Heatmap(z=whole_image_resized))
+Overview_plot.add_trace(go.Heatmap(z=whole_image_resized, colorscale="Viridis"))
 
 # reverse the y axis, so the image is not upside dowsn
 Overview_plot.update_yaxes(autorange="reversed")
@@ -638,7 +673,7 @@ template = env.get_template(TEMPLATE_FILE)
 report_html_code = template.render(html_parameters=html_parameters)
 
 # write the report file
-output_path = Path(f"{args.output}/report.html")
+output_path = Path(f"{args.output}report.html")
 with open(output_path, "w") as fh:
     fh.write(report_html_code)
 
