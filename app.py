@@ -251,7 +251,7 @@ else:
 print(f"[report] Reading MCMICRO output from {data_path_abs}")
 if not Path(data_path).is_dir():
     print(
-        f"[report] ERROR: Input folder not found or could not be read. Please check if {data_path_abs} exists and contains the full valid output of MCMICRO"
+        f"[report] ERROR: Could not find input folder. Please check if {data_path_abs} exists and contains the full valid output of MCMICRO"
     )
     quit()
 # set parameter for max image size, used for dynamic downscaling later on
@@ -300,18 +300,18 @@ segmentation_module_names = [
 ]
 
 # assemble path to segmentation files
-segmentation_path = data_path + sample_name + "/segmentation/"
+segmentation_path = data_path + "/" + sample_name + "/segmentation/"
 
 # assemble path to registration files
-registration_path = data_path + sample_name + "/registration/"
+registration_path = data_path + "/" + sample_name + "/registration/"
 
 # assemble path to quantification files
-quantification_path = data_path + sample_name + "/quantification/"
+quantification_path = data_path + "/" + sample_name + "/quantification/"
 
 # assemble path to dearrayed cores + corresponding files
-cores_path = data_path + sample_name + "/dearray/"
-core_masks_path = data_path + sample_name + "/dearray/masks/"
-core_centroid_path = data_path + sample_name + "/qc/coreo/centroidsY-X.txt"
+cores_path = data_path + "/" + sample_name + "/dearray/"
+core_masks_path = data_path + "/" + sample_name + "/dearray/masks/"
+core_centroid_path = data_path + "/" + sample_name + "/qc/coreo/centroidsY-X.txt"
 
 
 # Check for dearray folder to determine if TMA or not
@@ -340,7 +340,7 @@ try:
         ]
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(quantification_path))} for valid csv files and rerun the script."
     )
     quit()
 
@@ -359,7 +359,7 @@ try:
     whole_image = imageio.imread(whole_image[0])
 except IndexError:  # TODO refactor exeption handling, too much redundancy
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {registration_path} for a valid image and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(registration_path))} for a valid image and rerun the script."
     )
     quit()
 
@@ -378,7 +378,7 @@ try:
         ]
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Segmentation images not found or could not be read. Please check {str(Path(segmentation_path))} for valid csv files and rerun the script."
     )
     quit()
 
@@ -398,7 +398,7 @@ try:
 
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(segmentation_path))} for valid csv files and rerun the script."
     )
     quit()
 
