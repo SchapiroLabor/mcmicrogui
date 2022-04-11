@@ -52,6 +52,7 @@ default_plot_layout = {
     "width": 500,
     "autosize": False,
     "paper_bgcolor": "rgba(0,0,0,0)",
+    "plot_bgcolor": "rgba(0,0,0,0)",
 }
 
 
@@ -237,9 +238,15 @@ def overlay_images_at_centroid(bg: np.array, fg: np.array, cen_y: float, cen_x: 
 
 
 # READING/SETTING PARAMETERS AND PATHS
-
-data_path = args.input
-data_path_abs = str(Path(data_path).resolve())
+if not args.input == None:
+    data_path = args.input
+    data_path_abs = str(Path(data_path).resolve())
+else:
+    data_path = "./data/"
+    data_path_abs = str(Path(data_path).resolve())
+    print(
+        f"No path to data source was provided. Assuming {data_path_abs} as data source."
+    )
 
 print(f"[report] Reading MCMICRO output from {data_path_abs}")
 if not Path(data_path).is_dir():
