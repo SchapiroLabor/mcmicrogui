@@ -340,7 +340,7 @@ try:
         ]
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(quantification_path))} for valid csv files and rerun the script."
     )
     quit()
 
@@ -359,7 +359,7 @@ try:
     whole_image = imageio.imread(whole_image[0])
 except IndexError:  # TODO refactor exeption handling, too much redundancy
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {registration_path} for a valid image and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(registration_path))} for a valid image and rerun the script."
     )
     quit()
 
@@ -378,7 +378,7 @@ try:
         ]
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Segmentation images not found or could not be read. Please check {str(Path(segmentation_path))} for valid csv files and rerun the script."
     )
     quit()
 
@@ -398,7 +398,7 @@ try:
 
 except (OSError, FileNotFoundError):
     print(
-        f"[report] ERROR: Registration image not found or could not be read. Please check {quantification_path} for valid csv files and rerun the script."
+        f"[report] ERROR: Registration image not found or could not be read. Please check {str(Path(segmentation_path))} for valid csv files and rerun the script."
     )
     quit()
 
