@@ -680,7 +680,7 @@ template = env.get_template(TEMPLATE_FILE)
 report_html_code = template.render(html_parameters=html_parameters)
 
 # write the report file
-output_path = Path(f"{args.output}report.html")
+output_path = Path(f"{args.output}/report.html")
 with open(output_path, "w") as fh:
     fh.write(report_html_code)
 
