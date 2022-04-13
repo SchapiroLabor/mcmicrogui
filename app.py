@@ -300,18 +300,18 @@ segmentation_module_names = [
 ]
 
 # assemble path to segmentation files
-segmentation_path = data_path + "/" + sample_name + "/segmentation/"
+segmentation_path = data_path + "/segmentation/"
 
 # assemble path to registration files
-registration_path = data_path + "/" + sample_name + "/registration/"
+registration_path = data_path + "/registration/"
 
 # assemble path to quantification files
-quantification_path = data_path + "/" + sample_name + "/quantification/"
+quantification_path = data_path + "/quantification/"
 
 # assemble path to dearrayed cores + corresponding files
-cores_path = data_path + "/" + sample_name + "/dearray/"
-core_masks_path = data_path + "/" + sample_name + "/dearray/masks/"
-core_centroid_path = data_path + "/" + sample_name + "/qc/coreo/centroidsY-X.txt"
+cores_path = data_path + "/dearray/"
+core_masks_path = data_path + "/dearray/masks/"
+core_centroid_path = data_path + "/qc/coreo/centroidsY-X.txt"
 
 
 # Check for dearray folder to determine if TMA or not
