@@ -509,9 +509,10 @@ if tma_mode:
     segmentation_cells = list(segmentation_dict_cells_whole.values())[0]
     segmentation_nuclei = list(segmentation_dict_nuclei_whole.values())[0]
 else:
-    segmentation_cells = list(segmentation_dict_cells.values())[0]
-    segmentation_nuclei = list(segmentation_dict_nuclei.values())[0]
-
+    segmentation_cells = list(segmentation_dict_cells.values())[0][0]
+    segmentation_nuclei = list(segmentation_dict_nuclei.values())[0][0]
+    num_cells = np.amax(segmentation_cells)
+    num_nuclei = np.amax(segmentation_nuclei)
 
 # SCALING IMAGE
 
@@ -560,10 +561,7 @@ p2 = (int(maxLoc[1] + (side_length / 2)), int(maxLoc[0] + (side_length / 2)))
 
 # subset the images + masks with the corner points
 high_res_crop = whole_image[p1[1] : p2[1], p1[0] : p2[0]]
-high_res_segmentation_mask_cells = segmentation_cells[
-    p1[1] : p2[1],
-    p1[0] : p2[0],
-]
+high_res_segmentation_mask_cells = segmentation_cells[p1[1] : p2[1], p1[0] : p2[0]]
 high_res_segmentation_mask_nuclei = segmentation_nuclei[p1[1] : p2[1], p1[0] : p2[0]]
 
 
@@ -576,7 +574,7 @@ Overview_plot.add_trace(go.Heatmap(z=whole_image_resized, colorscale="Viridis"))
 
 # reverse the y axis, so the image is not upside dowsn
 Overview_plot.update_yaxes(autorange="reversed")
-
+Overview_plot.update_layout(yaxis=dict(scaleanchor="x"))
 # add dropdown
 Overview_plot.update_layout(
     default_plot_layout,
