@@ -413,7 +413,7 @@ if tma_mode:
         for coordinate_pair in core_centroids
     ]
 
-core_centroids = np.array(core_centroids)
+    core_centroids = np.array(core_centroids)
 
 
 # PROCESSING QUANTIFICATION DATA
