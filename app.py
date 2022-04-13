@@ -540,7 +540,8 @@ while scaled_file_size > max_image_size:
 print(f"[report] Scaling image to {int(scaled_width)}x{int(scaled_height)} pixels")
 scaled_image_size = (int(scaled_width), int(scaled_height))
 whole_image_resized = resize(whole_image, scaled_image_size)
-whole_core_mask_resized = resize(whole_core_mask, scaled_image_size)
+if tma_mode:
+    whole_core_mask_resized = resize(whole_core_mask, scaled_image_size)
 
 
 # HIGH RES SAMPLE
