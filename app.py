@@ -672,7 +672,7 @@ html_parameters = {
 }
 
 # read the jinja template
-TEMPLATE_FILE = "html/template.html"
+TEMPLATE_FILE = "./mcmicrogui/template.html"
 template = env.get_template(TEMPLATE_FILE)
 
 # pass the parameters and generate the html
