@@ -12,4 +12,4 @@
 
 5. Run `python app.py` to launch the script.
 
-6. If you find any bugs, open an issue on github and write me a message on slack :)
+6. If you find any bugs, open an issue on github.
