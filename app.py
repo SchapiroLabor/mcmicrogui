@@ -45,6 +45,13 @@ parser.add_argument(
     type=str,
     help="Location where to output the report html file",
 )
+
+parser.add_argument(
+    "-m:",
+    "--marker",
+    type=str,
+    help="The name of a marker to be plotted on the report. See MCMICROs 'markers.csv' for a list of valid marker_names",
+)
 args = parser.parse_args()
 # set default parameter for plotly plots
 default_plot_layout = {
@@ -94,7 +101,7 @@ def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
             if i <= max:
                 cells_per_core = "NOT FOUND"
                 print(
-                    f"[report] Can not find quantification data for core #{i}. Please check if {str(quantification_path.resolve())} contains a valid .csv file for each core."
+                    f"[report] Can not find quantification data for core #{i}. Please check if {Path(quantification_path).resolve()} contains a valid .csv file for each core."
                 )
             else:
                 pass
@@ -121,7 +128,7 @@ def plot_core_overlay(image: np.array, mask: np.array) -> go.Figure:
             )
         except IndexError:
             print(
-                f"Can not find contour for core {i}. Please check if /dearray/masks in {data_path_abs} contains a valid mask for each core."
+                f"Can not find contour for core {i}. Please check if /dearray/masks in {data_path_abs} contains a valid mask for each core."  # TODO more helpful error message with absolute path missing here
             )
 
     # return plot
@@ -156,11 +163,16 @@ def plot_cell_contours_plotly(
     # Reset index so the CellID is the index
     data = data.set_index("CellID")
     # Cell
-    flag = data[marker].apply(lambda x: marker if x >= cutoff else "")
-    color = data[marker].apply(
-        lambda x: color_above_cutoff if x >= cutoff else color_below_cutoff
-    )
-
+    try:
+        flag = data[marker].apply(lambda x: marker if x >= cutoff else "")
+        color = data[marker].apply(
+            lambda x: color_above_cutoff if x >= cutoff else color_below_cutoff
+        )
+    except KeyError:
+        print(
+            f"[report] ERROR: Marker '{marker}' not found in {Path(quantification_path).resolve()}. Please check 'markers.csv' in {data_path_abs} for a list of valid markers."
+        )
+        quit()
     # Get range of cells
     min = int(mask[np.nonzero(mask)].min())
     max = int(mask[np.nonzero(mask)].max())
@@ -200,6 +212,7 @@ def plot_cell_contours_plotly(
     print(
         f"[report] Can not find contours for {error_counter} cells. Please check if /segmentation contains a valid cell segmentation mask."  # TODO read path variable in error message
     )
+
     return fig
 
 
@@ -238,6 +251,8 @@ def overlay_images_at_centroid(bg: np.array, fg: np.array, cen_y: float, cen_x: 
 
 
 # READING/SETTING PARAMETERS AND PATHS
+
+# parse input directory
 if not args.input == None:
     data_path = args.input
     data_path_abs = str(Path(data_path).resolve())
@@ -263,6 +278,9 @@ scale_factor = 1
 
 # y/x of the high res sample
 side_length = 500
+
+# marker
+marker_to_plot = args.marker
 
 # find MCMICRO parameter yaml file
 
@@ -628,7 +646,11 @@ else:
 
 # Segmentation
 segmentation_plot = plot_cell_contours_plotly(
-    high_res_crop, high_res_segmentation_mask_cells, quantification[0], "DNA_1", 0
+    high_res_crop,
+    high_res_segmentation_mask_cells,
+    quantification[0],
+    marker_to_plot,
+    0,
 )
 
 
@@ -672,7 +694,9 @@ html_parameters = {
 }
 
 # read the jinja template
-TEMPLATE_FILE = "./mcmicrogui/template.html"
+TEMPLATE_FILE = "./mcmicrogui/template.html"  # TODO WARNING THIS PATH IS REQUIRED FOR THE APPLICATION TO RUN IN A CONTAINER. IT DOES NOT WORK WHEN DEBUGGING LOCALLY!
+
+# TEMPLATE_FILE = "template.html"  # TODO USE THIS PATH FOR LOCAL DEBUGGING!
 template = env.get_template(TEMPLATE_FILE)
 
 # pass the parameters and generate the html
