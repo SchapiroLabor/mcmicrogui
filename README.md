@@ -1,4 +1,25 @@
-## Installation and running the script:
+## Run the application from a docker container
+1. Install docker (https://www.docker.com/).
+
+2. Open a terminal, run `docker pull ghcr.io/schapirolabor/mcmicrogui:latest` and wait for the download to finish.
+
+3. Run `docker images` to see the ID of the pulled image.
+
+4. Run `docker run -d -t -v <YOUR PATH TO MC MCMICRO DATA>:/input -v <PATH TO SAVE THE REPORT OF MCMCIRO GUI>:/output <DOCKER IMAGE ID>`. 
+   Replace the text in <> with the appropriate values/paths.
+
+5. Run `docker ps` to see the name of the container.
+
+6. Run `docker exec -it <CONTAINER NAME> /bin/bash` to open a shell inside the container.
+
+7. Run `python mcmicrogui/app.py -i input -o output -m <YOUR MARKER>`
+   <YOUR MARKER> is the marker you want to visualize on the report.
+
+8. The report should now generate. If you find any bugs or have suggestions for new features, report them here: https://github.com/SchapiroLabor/mcmicrogui/issues
+
+
+
+## Run the application from the source code
 
 **
 
@@ -12,4 +33,4 @@
 
 5. Run `python app.py` to launch the script.
 
-6. If you find any bugs, open an issue on github.
+6. If you find any bugs or have suggestions for new features, report them here: https://github.com/SchapiroLabor/mcmicrogui/issues
