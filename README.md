@@ -13,7 +13,7 @@
 6. Run `docker exec -it <CONTAINER NAME> /bin/bash` to open a shell inside the container.
 
 7. Run `python mcmicrogui/app.py -i input -o output -m <YOUR MARKER>`
-   YOUR MARKER is the marker you want to visualize on the report.
+   YOUR MARKER is the marker you are looking to visualize on the report.
 
 8. The report should now generate. If you find any bugs or have suggestions for new features, report them here: https://github.com/SchapiroLabor/mcmicrogui/issues
 
