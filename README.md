@@ -5,7 +5,7 @@
 
 3. Run `docker images` to see the ID of the pulled image.
 
-4. Run `docker run -d -t -v <YOUR PATH TO MC MCMICRO DATA>:/input -v <PATH TO SAVE THE REPORT OF MCMCIRO GUI>:/output <DOCKER IMAGE ID>`. 
+4. Run `docker run -d -t -v <YOUR PATH TO MCMICRO DATA>:/input -v <PATH TO SAVE THE REPORT OF MCMCIRO GUI>:/output <DOCKER IMAGE ID>`. 
    Replace the text in <> with the appropriate values/paths.
 
 5. Run `docker ps` to see the name of the container.
